@@ -123,7 +123,7 @@ class MonteCarloAgent:
             self.oppo_money_left += data['players'][1 - self.position]['win_money']
 
 
-    def get_action(self, simulation_times=1000):
+    def get_action(self, simulation_times=10000):
         win_rate = self._estimate_hole_card_win_rate(simulation_times)
         print("win_rate: ", win_rate)
         if win_rate < .3:
@@ -197,15 +197,19 @@ def main():
     parser.add_argument('-g', '--game_number', type=int, default=1)
     parser.add_argument('-b', '--bot', default="CallAgent")
     parser.add_argument('-s', '--not_print_state', action="store_true")
+    parser.add_argument('--no_bots', action="store_true")
+    parser.add_argument('-t', '--simulation_times', type=int, default=10000)
     
     args = parser.parse_args()
     print(args)
 
-    room_id = args.room_id          # 进行对战的房间号
-    name = args.name                # 当前程序的 AI 名字
-    game_number = args.game_number  # 最大对局数量
-    bots = [args.bot]               # 需要系统额外添加的智能体名字
+    room_id = args.room_id                          # 进行对战的房间号
+    name = args.name                                # 当前程序的 AI 名字
+    game_number = args.game_number                  # 最大对局数量
+    no_bots = args.no_bots
+    bots = [args.bot] if no_bots is False else []   # 需要系统额外添加的智能体名字
     print_state = not args.not_print_state
+    simulation_times = args.simulation_times
 
     Agent = MonteCarloAgent(room_id, name, game_number, bots[0], print_state)
     Agent.connect()
@@ -216,7 +220,7 @@ def main():
         if data['info'] == 'state':
             if data['position'] == data['action_position']:
                 Agent.print_data(data)
-                action = Agent.get_action(10000)
+                action = Agent.get_action(simulation_times)
                 Agent.send_action(action)
         elif data['info'] == 'result':
             Agent.print_result(data)
